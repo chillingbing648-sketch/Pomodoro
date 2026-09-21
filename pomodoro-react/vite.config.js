@@ -4,5 +4,6 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/pomodoro-timer/',
+  // GitHub Pages serves this project from /Pomodoro/
+  base: '/Pomodoro/',
 })
