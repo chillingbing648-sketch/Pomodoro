@@ -1,0 +1,1384 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import "./App.css";
+
+/* =========================================================
+   CONFIGURATION
+========================================================= */
+
+const THEMES = {
+  "Live Galaxy":
+    "https://i.pinimg.com/originals/09/a3/52/09a3521d09e59ed1e8a8b1399e82c5f1.gif",
+  "Lofi Study Girl":
+    "https://i.pinimg.com/originals/a4/f2/cb/a4f2cb80ff2ae2772e80bf30e9d78d4c.gif",
+  "Pixel Art Rain":
+    "https://i.pinimg.com/originals/32/30/b7/3230b77626359fdd77cbaeb9cb712792.gif",
+  "Neon Cyberpunk":
+    "https://i.pinimg.com/originals/82/bf/45/82bf450098f98c8c2059a43a859c7820.gif",
+};
+
+const DEFAULT_SETTINGS = {
+  work: 25,
+  short: 5,
+  long: 15,
+};
+
+const SPOTIFY_PLAYLIST =
+  "https://open.spotify.com/embed/playlist/37i9dQZF1DWWQRwui0ExPn?utm_source=generator&theme=0";
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+function formatTime(milliseconds) {
+  const totalSeconds = Math.max(
+    0,
+    Math.floor(Number(milliseconds || 0) / 1000)
+  );
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [
+    hours.toString().padStart(2, "0"),
+    minutes.toString().padStart(2, "0"),
+    seconds.toString().padStart(2, "0"),
+  ].join(":");
+}
+
+function getStoredTasks() {
+  try {
+    const saved = localStorage.getItem("pomodoro_tasks");
+
+    if (!saved) return [];
+
+    const parsed = JSON.parse(saved);
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function getStoredTheme() {
+  try {
+    const saved = localStorage.getItem("pomodoro_theme");
+
+    return saved && THEMES[saved] ? saved : "Live Galaxy";
+  } catch {
+    return "Live Galaxy";
+  }
+}
+
+/* =========================================================
+   APPLICATION
+========================================================= */
+
+export default function App() {
+  /* =======================================================
+     TIMER STATE
+  ======================================================= */
+
+  const [sessionType, setSessionType] = useState("Work");
+
+  const [remainingTime, setRemainingTime] = useState(
+    DEFAULT_SETTINGS.work * 60 * 1000
+  );
+
+  const [isRunning, setIsRunning] = useState(false);
+
+  const [workSessions, setWorkSessions] = useState(0);
+
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+
+  /* =======================================================
+     UI STATE
+  ======================================================= */
+
+  const [currentTheme, setCurrentTheme] = useState(getStoredTheme);
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const [taskInput, setTaskInput] = useState("");
+
+  const [tasks, setTasks] = useState(getStoredTasks);
+
+  const [notificationMessage, setNotificationMessage] = useState("");
+
+  /* =======================================================
+     DRAWING STATE
+  ======================================================= */
+
+  const canvasRef = useRef(null);
+  const contextRef = useRef(null);
+  const drawingRef = useRef(false);
+
+  const [brushColor, setBrushColor] = useState("#7c6cff");
+  const [brushSize, setBrushSize] = useState(5);
+
+  /* =======================================================
+     TIMER REFS
+
+     Refs hold the live timer values without forcing the
+     timer effect to restart every 250ms.
+  ======================================================= */
+
+  const deadlineRef = useRef(null);
+
+  const remainingTimeRef = useRef(
+    DEFAULT_SETTINGS.work * 60 * 1000
+  );
+
+  const sessionTypeRef = useRef("Work");
+
+  const settingsRef = useRef(DEFAULT_SETTINGS);
+
+  const workSessionsRef = useRef(0);
+
+  const tasksRef = useRef([]);
+
+  /* =======================================================
+     KEEP REFS SYNCHRONIZED
+  ======================================================= */
+
+  useEffect(() => {
+    sessionTypeRef.current = sessionType;
+  }, [sessionType]);
+
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
+
+  useEffect(() => {
+    workSessionsRef.current = workSessions;
+  }, [workSessions]);
+
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
+
+  /* =======================================================
+     PERSISTENCE
+  ======================================================= */
+
+  useEffect(() => {
+    localStorage.setItem(
+      "pomodoro_tasks",
+      JSON.stringify(tasks)
+    );
+  }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "pomodoro_theme",
+      currentTheme
+    );
+  }, [currentTheme]);
+
+  /* =======================================================
+     NOTIFICATIONS
+  ======================================================= */
+
+  const showNotification = useCallback((message) => {
+    setNotificationMessage(message);
+
+    window.setTimeout(() => {
+      setNotificationMessage("");
+    }, 3000);
+  }, []);
+
+  const sendBrowserNotification = useCallback(
+    (title, body) => {
+      if (
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        new Notification(title, {
+          body,
+        });
+      }
+    },
+    []
+  );
+
+  const requestNotifications = useCallback(async () => {
+    if (!("Notification" in window)) return;
+
+    if (Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch {
+        // Notification permission is optional.
+      }
+    }
+  }, []);
+
+  /* =======================================================
+     COMPLETION SOUND
+  ======================================================= */
+
+  const playCompletionSound = useCallback(() => {
+    try {
+      const audio = new Audio(
+        "https://www.soundjay.com/button/beep-07.wav"
+      );
+
+      audio.volume = 0.55;
+
+      const promise = audio.play();
+
+      if (promise) {
+        promise.catch(() => {
+          // Browser autoplay restrictions are harmless.
+        });
+      }
+    } catch {
+      // Audio should never break the timer.
+    }
+  }, []);
+
+  /* =======================================================
+     TASK HELPERS
+  ======================================================= */
+
+  const addTask = useCallback(() => {
+    const title = taskInput.trim();
+
+    if (!title) return;
+
+    const newTask = {
+      id: Date.now(),
+      title,
+      completed: false,
+      pomodoros: 0,
+    };
+
+    setTasks((previous) => [
+      ...previous,
+      newTask,
+    ]);
+
+    setTaskInput("");
+  }, [taskInput]);
+
+  const toggleTask = useCallback((taskId) => {
+    setTasks((previous) =>
+      previous.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              completed: !task.completed,
+            }
+          : task
+      )
+    );
+  }, []);
+
+  const deleteTask = useCallback((taskId) => {
+    setTasks((previous) =>
+      previous.filter((task) => task.id !== taskId)
+    );
+  }, []);
+
+  /* =======================================================
+     TIMER COMPLETION
+  ======================================================= */
+
+  const completeSession = useCallback(() => {
+    const currentSession = sessionTypeRef.current;
+    const currentSettings = settingsRef.current;
+    const currentWorkSessions = workSessionsRef.current;
+    const currentTasks = tasksRef.current;
+
+    setIsRunning(false);
+
+    deadlineRef.current = null;
+
+    remainingTimeRef.current = 0;
+    setRemainingTime(0);
+
+    playCompletionSound();
+
+    if (currentSession === "Work") {
+      const newSessionCount = currentWorkSessions + 1;
+
+      workSessionsRef.current = newSessionCount;
+      setWorkSessions(newSessionCount);
+
+      /* -----------------------------------------------
+         Attribute completed Pomodoro to first
+         unfinished task.
+      ----------------------------------------------- */
+
+      const activeTask = currentTasks.find(
+        (task) => !task.completed
+      );
+
+      if (activeTask) {
+        setTasks((previous) =>
+          previous.map((task) =>
+            task.id === activeTask.id
+              ? {
+                  ...task,
+                  pomodoros: task.pomodoros + 1,
+                }
+              : task
+          )
+        );
+      }
+
+      /* -----------------------------------------------
+         Long break every fourth focus session.
+      ----------------------------------------------- */
+
+      if (newSessionCount % 4 === 0) {
+        const nextTime =
+          currentSettings.long * 60 * 1000;
+
+        sessionTypeRef.current = "Long Break";
+
+        remainingTimeRef.current = nextTime;
+
+        setSessionType("Long Break");
+        setRemainingTime(nextTime);
+
+        showNotification(
+          "Long break unlocked. Take some time to reset."
+        );
+
+        sendBrowserNotification(
+          "Pomodoro Complete",
+          "Four focus sessions completed. Long break unlocked."
+        );
+      } else {
+        const nextTime =
+          currentSettings.short * 60 * 1000;
+
+        sessionTypeRef.current = "Short Break";
+
+        remainingTimeRef.current = nextTime;
+
+        setSessionType("Short Break");
+        setRemainingTime(nextTime);
+
+        showNotification(
+          "Focus session complete. Short break started."
+        );
+
+        sendBrowserNotification(
+          "Focus Session Complete",
+          "Your short break is ready."
+        );
+      }
+
+      return;
+    }
+
+    /* -----------------------------------------------
+       Break finished → return to Work.
+    ----------------------------------------------- */
+
+    const nextTime =
+      currentSettings.work * 60 * 1000;
+
+    sessionTypeRef.current = "Work";
+
+    remainingTimeRef.current = nextTime;
+
+    setSessionType("Work");
+    setRemainingTime(nextTime);
+
+    showNotification(
+      "Break finished. Ready to focus again."
+    );
+
+    sendBrowserNotification(
+      "Break Finished",
+      "Your next focus session is ready."
+    );
+  }, [
+    playCompletionSound,
+    showNotification,
+    sendBrowserNotification,
+  ]);
+
+  /* =======================================================
+     TIMER ENGINE
+  ======================================================= */
+
+  useEffect(() => {
+    if (!isRunning) {
+      return undefined;
+    }
+
+    if (deadlineRef.current === null) {
+      deadlineRef.current =
+        Date.now() + remainingTimeRef.current;
+    }
+
+    const interval = window.setInterval(() => {
+      if (deadlineRef.current === null) return;
+
+      const nextRemaining = Math.max(
+        0,
+        deadlineRef.current - Date.now()
+      );
+
+      remainingTimeRef.current = nextRemaining;
+
+      setRemainingTime(nextRemaining);
+
+      if (nextRemaining <= 0) {
+        window.clearInterval(interval);
+
+        completeSession();
+      }
+    }, 250);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [isRunning, completeSession]);
+
+  /* =======================================================
+     TIMER CONTROLS
+  ======================================================= */
+
+  const startTimer = useCallback(() => {
+    if (remainingTimeRef.current <= 0) return;
+
+    requestNotifications();
+
+    deadlineRef.current =
+      Date.now() + remainingTimeRef.current;
+
+    setIsRunning(true);
+  }, [requestNotifications]);
+
+  const pauseTimer = useCallback(() => {
+    if (deadlineRef.current !== null) {
+      const currentRemaining = Math.max(
+        0,
+        deadlineRef.current - Date.now()
+      );
+
+      remainingTimeRef.current = currentRemaining;
+
+      setRemainingTime(currentRemaining);
+    }
+
+    deadlineRef.current = null;
+
+    setIsRunning(false);
+  }, []);
+
+  const toggleTimer = useCallback(() => {
+    if (isRunning) {
+      pauseTimer();
+    } else {
+      startTimer();
+    }
+  }, [
+    isRunning,
+    pauseTimer,
+    startTimer,
+  ]);
+
+  const resetTimer = useCallback(() => {
+    const nextTime =
+      settingsRef.current.work * 60 * 1000;
+
+    deadlineRef.current = null;
+
+    remainingTimeRef.current = nextTime;
+
+    sessionTypeRef.current = "Work";
+
+    workSessionsRef.current = 0;
+
+    setIsRunning(false);
+    setSessionType("Work");
+    setWorkSessions(0);
+    setRemainingTime(nextTime);
+
+    showNotification("Timer reset.");
+  }, [showNotification]);
+
+  /* =======================================================
+     APPLY SETTINGS
+  ======================================================= */
+
+  const applySettings = useCallback(() => {
+    const work = Math.min(
+      120,
+      Math.max(1, Number(settings.work) || 25)
+    );
+
+    const short = Math.min(
+      60,
+      Math.max(1, Number(settings.short) || 5)
+    );
+
+    const long = Math.min(
+      120,
+      Math.max(1, Number(settings.long) || 15)
+    );
+
+    const nextSettings = {
+      work,
+      short,
+      long,
+    };
+
+    const currentSession =
+      sessionTypeRef.current;
+
+    let nextTime;
+
+    if (currentSession === "Work") {
+      nextTime = work * 60 * 1000;
+    } else if (currentSession === "Short Break") {
+      nextTime = short * 60 * 1000;
+    } else {
+      nextTime = long * 60 * 1000;
+    }
+
+    settingsRef.current = nextSettings;
+
+    remainingTimeRef.current = nextTime;
+
+    deadlineRef.current = null;
+
+    setSettings(nextSettings);
+    setRemainingTime(nextTime);
+    setIsRunning(false);
+    setSettingsOpen(false);
+
+    showNotification(
+      "Timer settings updated."
+    );
+  }, [settings, showNotification]);
+
+  /* =======================================================
+     CANVAS INITIALIZATION
+  ======================================================= */
+
+  useEffect(() => {
+    if (sessionType !== "Long Break") {
+      return;
+    }
+
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) return;
+
+    context.fillStyle = "#ffffff";
+
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    context.lineCap = "round";
+    context.lineJoin = "round";
+
+    contextRef.current = context;
+  }, [sessionType]);
+
+  /* =======================================================
+     CANVAS POSITION
+  ======================================================= */
+
+  const getCanvasPosition = useCallback(
+    (event) => {
+      const canvas = canvasRef.current;
+
+      if (!canvas) {
+        return {
+          x: 0,
+          y: 0,
+        };
+      }
+
+      const rect =
+        canvas.getBoundingClientRect();
+
+      const scaleX =
+        canvas.width / rect.width;
+
+      const scaleY =
+        canvas.height / rect.height;
+
+      return {
+        x:
+          (event.clientX - rect.left) *
+          scaleX,
+
+        y:
+          (event.clientY - rect.top) *
+          scaleY,
+      };
+    },
+    []
+  );
+
+  /* =======================================================
+     CANVAS DRAWING
+  ======================================================= */
+
+  const startDrawing = useCallback(
+    (event) => {
+      const context = contextRef.current;
+
+      if (!context) return;
+
+      drawingRef.current = true;
+
+      const { x, y } =
+        getCanvasPosition(event);
+
+      context.beginPath();
+      context.moveTo(x, y);
+
+      canvasRef.current?.setPointerCapture?.(
+        event.pointerId
+      );
+    },
+    [getCanvasPosition]
+  );
+
+  const draw = useCallback(
+    (event) => {
+      if (!drawingRef.current) return;
+
+      const context = contextRef.current;
+
+      if (!context) return;
+
+      const { x, y } =
+        getCanvasPosition(event);
+
+      context.lineWidth = Number(brushSize);
+
+      context.strokeStyle = brushColor;
+
+      context.lineTo(x, y);
+      context.stroke();
+    },
+    [
+      brushColor,
+      brushSize,
+      getCanvasPosition,
+    ]
+  );
+
+  const stopDrawing = useCallback(() => {
+    if (!drawingRef.current) return;
+
+    drawingRef.current = false;
+
+    contextRef.current?.beginPath();
+  }, []);
+
+  const clearCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+
+    const context = contextRef.current;
+
+    if (!canvas || !context) return;
+
+    context.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    context.fillStyle = "#ffffff";
+
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+  }, []);
+
+  /* =======================================================
+     KEYBOARD SHORTCUTS
+  ======================================================= */
+
+  useEffect(() => {
+    const handleKeyboard = (event) => {
+      const tag =
+        event.target?.tagName;
+
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT"
+      ) {
+        return;
+      }
+
+      if (event.code === "Space") {
+        event.preventDefault();
+
+        toggleTimer();
+      }
+
+      if (
+        event.key.toLowerCase() === "r"
+      ) {
+        resetTimer();
+      }
+
+      if (
+        event.key.toLowerCase() === "s"
+      ) {
+        setSettingsOpen(
+          (previous) => !previous
+        );
+      }
+    };
+
+    window.addEventListener(
+      "keydown",
+      handleKeyboard
+    );
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        handleKeyboard
+      );
+    };
+  }, [
+    toggleTimer,
+    resetTimer,
+  ]);
+
+  /* =======================================================
+     DERIVED DATA
+  ======================================================= */
+
+  const completedTasks =
+    tasks.filter(
+      (task) => task.completed
+    ).length;
+
+  const pendingTasks =
+    tasks.length - completedTasks;
+
+  const progress =
+    tasks.length > 0
+      ? Math.round(
+          (completedTasks /
+            tasks.length) *
+            100
+        )
+      : 0;
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
+  return (
+    <div
+      className="app-shell"
+      style={{
+        "--background-image": `url("${THEMES[currentTheme]}")`,
+      }}
+    >
+      {/* BACKGROUND */}
+
+      <div className="background-layer" />
+      <div className="stars" />
+      <div className="twinkling" />
+
+      {/* HEADER */}
+
+      <header className="app-header">
+        <div className="brand">
+          <div className="brand-mark">
+            P
+          </div>
+
+          <div>
+            <span className="brand-name">
+              Pomodoro
+            </span>
+
+            <span className="brand-subtitle">
+              Focus workspace
+            </span>
+          </div>
+        </div>
+
+        <div className="header-actions">
+          <div className="session-counter">
+            <span>
+              FOCUS SESSIONS
+            </span>
+
+            <strong>
+              {workSessions}
+            </strong>
+          </div>
+
+          <button
+            className="settings-trigger"
+            onClick={() =>
+              setSettingsOpen(
+                (previous) => !previous
+              )
+            }
+            aria-label="Open timer settings"
+          >
+            <span>Settings</span>
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN */}
+
+      <main className="dashboard">
+
+        {/* TIMER */}
+
+        <section className="panel timer-panel">
+          <div className="section-label">
+            <span className="status-dot" />
+
+            {sessionType}
+          </div>
+
+          <div className="timer-heading">
+            <h1>Focus Timer</h1>
+
+            <p>
+              Stay present. One session at a time.
+            </p>
+          </div>
+
+          <div
+            className={`timer-display ${
+              isRunning
+                ? "timer-running"
+                : ""
+            }`}
+          >
+            {formatTime(remainingTime)}
+          </div>
+
+          <div className="timer-status">
+            {isRunning
+              ? "Session in progress"
+              : "Ready when you are"}
+          </div>
+
+          <div className="timer-controls">
+            <button
+              className="primary-action"
+              onClick={toggleTimer}
+            >
+              {isRunning
+                ? "Pause Focus"
+                : "Start Focus"}
+            </button>
+
+            <button
+              className="secondary-action"
+              onClick={resetTimer}
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="timer-meta">
+            <div>
+              <span>Work</span>
+
+              <strong>
+                {settings.work}m
+              </strong>
+            </div>
+
+            <div>
+              <span>Short Break</span>
+
+              <strong>
+                {settings.short}m
+              </strong>
+            </div>
+
+            <div>
+              <span>Long Break</span>
+
+              <strong>
+                {settings.long}m
+              </strong>
+            </div>
+          </div>
+
+          {/* SETTINGS */}
+
+          {settingsOpen && (
+            <div className="settings-panel">
+              <div className="settings-header">
+                <div>
+                  <span className="eyebrow">
+                    TIMER CONFIGURATION
+                  </span>
+
+                  <h3>
+                    Session settings
+                  </h3>
+                </div>
+
+                <button
+                  className="close-settings"
+                  onClick={() =>
+                    setSettingsOpen(false)
+                  }
+                  aria-label="Close settings"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="settings-grid">
+                <label>
+                  <span>Work</span>
+
+                  <input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={settings.work}
+                    onChange={(event) =>
+                      setSettings(
+                        (previous) => ({
+                          ...previous,
+                          work:
+                            event.target.value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+
+                <label>
+                  <span>
+                    Short break
+                  </span>
+
+                  <input
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={settings.short}
+                    onChange={(event) =>
+                      setSettings(
+                        (previous) => ({
+                          ...previous,
+                          short:
+                            event.target.value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+
+                <label>
+                  <span>
+                    Long break
+                  </span>
+
+                  <input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={settings.long}
+                    onChange={(event) =>
+                      setSettings(
+                        (previous) => ({
+                          ...previous,
+                          long:
+                            event.target.value,
+                        })
+                      )
+                    }
+                  />
+                </label>
+              </div>
+
+              <div className="theme-selector">
+                <label htmlFor="theme-select">
+                  Background atmosphere
+                </label>
+
+                <select
+                  id="theme-select"
+                  value={currentTheme}
+                  onChange={(event) =>
+                    setCurrentTheme(
+                      event.target.value
+                    )
+                  }
+                >
+                  {Object.keys(
+                    THEMES
+                  ).map((themeName) => (
+                    <option
+                      key={themeName}
+                      value={themeName}
+                    >
+                      {themeName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                className="apply-settings"
+                onClick={applySettings}
+              >
+                Apply Configuration
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* SPOTIFY */}
+
+        <section className="panel spotify-panel">
+          <div className="spotify-heading">
+            <div>
+              <span className="eyebrow">
+                FOCUS SOUNDTRACK
+              </span>
+
+              <h2>
+                Study Playlist
+              </h2>
+
+              <p>
+                Keep your focus environment
+                exactly where you want it.
+              </p>
+            </div>
+
+            <div className="spotify-symbol">
+              ●
+            </div>
+          </div>
+
+          <div className="spotify-widget">
+            <iframe
+              title="Spotify Study Playlist"
+              src={SPOTIFY_PLAYLIST}
+              width="100%"
+              height="352"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+            />
+          </div>
+        </section>
+
+        {/* TASKS */}
+
+        <section className="panel tasks-panel">
+          <div className="tasks-header">
+            <div>
+              <span className="eyebrow">
+                TODAY'S WORK
+              </span>
+
+              <h2>
+                Focus Tasks
+              </h2>
+
+              <p>
+                Turn your Pomodoros into
+                visible progress.
+              </p>
+            </div>
+
+            <div className="task-progress">
+              <strong>
+                {progress}%
+              </strong>
+
+              <span>
+                {completedTasks}/
+                {tasks.length}
+              </span>
+            </div>
+          </div>
+
+          <div className="task-input">
+            <input
+              type="text"
+              placeholder="What are you focusing on?"
+              value={taskInput}
+              onChange={(event) =>
+                setTaskInput(
+                  event.target.value
+                )
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  addTask();
+                }
+              }}
+            />
+
+            <button onClick={addTask}>
+              Add Task
+            </button>
+          </div>
+
+          <div className="task-list">
+            {tasks.length === 0 ? (
+              <div className="empty-tasks">
+                <span className="empty-icon">
+                  +
+                </span>
+
+                <div>
+                  <strong>
+                    No focus tasks yet
+                  </strong>
+
+                  <p>
+                    Add something you want
+                    to complete during your
+                    next session.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              tasks.map((task) => (
+                <div
+                  className={`task-item ${
+                    task.completed
+                      ? "task-completed"
+                      : ""
+                  }`}
+                  key={task.id}
+                >
+                  <button
+                    className="task-check"
+                    onClick={() =>
+                      toggleTask(task.id)
+                    }
+                    aria-label={
+                      task.completed
+                        ? "Mark task incomplete"
+                        : "Complete task"
+                    }
+                  >
+                    {task.completed
+                      ? "✓"
+                      : ""}
+                  </button>
+
+                  <div className="task-content">
+                    <span className="task-title">
+                      {task.title}
+                    </span>
+
+                    <span className="task-pomodoros">
+                      {task.pomodoros} Pomodoro
+                      {task.pomodoros === 1
+                        ? ""
+                        : "s"}
+                    </span>
+                  </div>
+
+                  <button
+                    className="task-delete"
+                    onClick={() =>
+                      deleteTask(task.id)
+                    }
+                    aria-label="Delete task"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {tasks.length > 0 && (
+            <div className="task-summary">
+              <span>
+                {pendingTasks} remaining
+              </span>
+
+              <span>
+                {completedTasks} completed
+              </span>
+            </div>
+          )}
+        </section>
+
+        {/* LONG BREAK */}
+
+        <section className="panel break-panel">
+          {sessionType !== "Long Break" ? (
+            <div className="break-locked">
+              <span className="eyebrow">
+                LONG BREAK SPACE
+              </span>
+
+              <h2>
+                Your reset space
+              </h2>
+
+              <p>
+                Complete four focus sessions
+                to unlock the creative break
+                workspace.
+              </p>
+
+              <div className="break-progress">
+                <span
+                  style={{
+                    width: `${
+                      (workSessions % 4) *
+                      25
+                    }%`,
+                  }}
+                />
+              </div>
+
+              <small>
+                {4 -
+                  (workSessions % 4)}{" "}
+                sessions until long break
+              </small>
+            </div>
+          ) : (
+            <div className="drawing-workspace">
+              <div className="drawing-header">
+                <div>
+                  <span className="eyebrow">
+                    LONG BREAK
+                  </span>
+
+                  <h2>
+                    Creative Reset
+                  </h2>
+                </div>
+
+                <span className="break-badge">
+                  Unlocked
+                </span>
+              </div>
+
+              <div className="canvas-container">
+                <canvas
+                  ref={canvasRef}
+                  width={900}
+                  height={420}
+                  onPointerDown={
+                    startDrawing
+                  }
+                  onPointerMove={draw}
+                  onPointerUp={stopDrawing}
+                  onPointerCancel={
+                    stopDrawing
+                  }
+                  onPointerLeave={
+                    stopDrawing
+                  }
+                />
+              </div>
+
+              <div className="drawing-controls">
+                <label>
+                  Color
+
+                  <input
+                    type="color"
+                    value={brushColor}
+                    onChange={(event) =>
+                      setBrushColor(
+                        event.target.value
+                      )
+                    }
+                  />
+                </label>
+
+                <label className="brush-control">
+                  Brush
+
+                  <input
+                    type="range"
+                    min="1"
+                    max="30"
+                    value={brushSize}
+                    onChange={(event) =>
+                      setBrushSize(
+                        Number(
+                          event.target.value
+                        )
+                      )
+                    }
+                  />
+                </label>
+
+                <button
+                  className="clear-canvas"
+                  onClick={clearCanvas}
+                >
+                  Clear Canvas
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      </main>
+
+      {/* FOOTER */}
+
+      <footer className="app-footer">
+        <span>
+          <kbd>Space</kbd>
+          Start / Pause
+        </span>
+
+        <span>
+          <kbd>R</kbd>
+          Reset
+        </span>
+
+        <span>
+          <kbd>S</kbd>
+          Settings
+        </span>
+      </footer>
+
+      {/* NOTIFICATION */}
+
+      {notificationMessage && (
+        <div
+          className="toast"
+          role="status"
+        >
+          <span className="toast-dot" />
+
+          {notificationMessage}
+        </div>
+      )}
+    </div>
+  );
+}

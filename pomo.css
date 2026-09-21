@@ -1,0 +1,596 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+/* =========================================================
+   GALAXY POMODORO — CORE UI
+========================================================= */
+
+:root {
+  --bg: #07080c;
+  --card: rgba(17, 18, 24, 0.92);
+  --card-hover: rgba(22, 24, 31, 0.96);
+
+  --border: rgba(255, 255, 255, 0.10);
+  --border-hover: rgba(255, 255, 255, 0.17);
+
+  --text: #f5f5f7;
+  --muted: #9b9da6;
+  --subtle: #686b75;
+
+  --purple: #9b8cff;
+  --purple-soft: rgba(155, 140, 255, 0.13);
+
+  --green: #1ed760;
+  --red: #ff7272;
+
+  --radius: 22px;
+  --radius-sm: 12px;
+
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.38);
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  color: var(--text);
+  background: var(--bg);
+
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+/* =========================================================
+   GALAXY BACKGROUND
+========================================================= */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+
+  background:
+    linear-gradient(
+      rgba(5, 6, 10, 0.48),
+      rgba(5, 6, 10, 0.76)
+    ),
+    url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2048&auto=format&fit=crop")
+    center / cover no-repeat;
+
+  animation: galaxyMove 80s ease-in-out infinite alternate;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(123, 97, 255, 0.13),
+      transparent 42%
+    );
+}
+
+@keyframes galaxyMove {
+  from {
+    transform: scale(1.04);
+  }
+
+  to {
+    transform: scale(1.10);
+  }
+}
+
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
+
+.dashboard {
+  width: min(94%, 1100px);
+  margin: auto;
+  padding: 32px 0 50px;
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  grid-template-areas:
+    "timer spotify"
+    "tasks tasks"
+    "game game";
+
+  gap: 18px;
+}
+
+/* =========================================================
+   CARD SYSTEM
+========================================================= */
+
+.panel {
+  position: relative;
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  box-shadow: var(--shadow);
+
+  overflow: hidden;
+
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.panel:hover {
+  border-color: var(--border-hover);
+}
+
+/* =========================================================
+   TIMER
+========================================================= */
+
+.timer-panel {
+  grid-area: timer;
+
+  min-height: 560px;
+
+  padding: 32px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timer-panel h1,
+.spotify-panel h2,
+.tasks-panel h2,
+.game-panel h2 {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.timer-panel h1 {
+  margin-bottom: 12px;
+
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+
+  color: var(--text);
+}
+
+#session-type {
+  display: inline-block;
+
+  margin-bottom: 20px;
+
+  color: var(--muted);
+
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+#time {
+  margin: 5px 0 25px;
+
+  font-family: "Space Grotesk", sans-serif;
+
+  font-size: clamp(4rem, 7vw, 6rem);
+  font-weight: 600;
+
+  line-height: 1;
+
+  letter-spacing: -0.07em;
+
+  font-variant-numeric: tabular-nums;
+
+  color: #fff;
+
+  text-shadow:
+    0 0 30px rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.controls button {
+  min-width: 105px;
+
+  padding: 11px 20px;
+
+  border-radius: 12px;
+  border: 1px solid transparent;
+
+  cursor: pointer;
+
+  font-weight: 700;
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+#start-stop {
+  background: #f4f4f5;
+  color: #08090b;
+}
+
+#start-stop:hover {
+  background: #fff;
+  transform: translateY(-2px);
+}
+
+#reset {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border);
+
+  color: var(--text);
+}
+
+#reset:hover {
+  background: rgba(255, 255, 255, 0.10);
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+.settings {
+  width: 100%;
+  margin-top: auto;
+
+  padding-top: 25px;
+
+  border-top: 1px solid var(--border);
+}
+
+.settings .input-group {
+  flex: 1;
+}
+
+.settings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.settings label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: var(--muted);
+
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.settings input {
+  width: 100%;
+
+  padding: 10px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  background: rgba(0, 0, 0, 0.28);
+
+  color: var(--text);
+
+  text-align: center;
+
+  outline: none;
+}
+
+.settings input:focus {
+  border-color: var(--purple);
+}
+
+/* =========================================================
+   CUSTOM TIMER
+========================================================= */
+
+.apply-btn {
+  grid-column: 1 / -1;
+
+  width: 100%;
+
+  padding: 11px;
+
+  border: 1px solid rgba(155, 140, 255, 0.3);
+  border-radius: var(--radius-sm);
+
+  background: var(--purple-soft);
+
+  color: #bcb2ff;
+
+  cursor: pointer;
+
+  font-size: 0.76rem;
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  transition: 180ms ease;
+}
+
+.apply-btn:hover {
+  background: rgba(155, 140, 255, 0.20);
+  border-color: rgba(155, 140, 255, 0.55);
+}
+
+/* =========================================================
+   SESSIONS
+========================================================= */
+
+.statistics {
+  margin-top: 18px;
+
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.highlight {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* =========================================================
+   SPOTIFY
+========================================================= */
+
+.spotify-panel {
+  grid-area: spotify;
+
+  padding: 25px;
+}
+
+.spotify-panel h2 {
+  margin-bottom: 18px;
+
+  font-size: 1.65rem;
+  letter-spacing: -0.035em;
+}
+
+.spotify-container {
+  overflow: hidden;
+
+  border-radius: 18px;
+
+  background: #121414;
+
+  border: 1px solid rgba(30, 215, 96, 0.12);
+
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+.spotify-container iframe {
+  display: block;
+
+  width: 100%;
+
+  min-height: 352px;
+
+  border: 0;
+}
+
+/* =========================================================
+   TASKS
+========================================================= */
+
+.tasks-panel {
+  grid-area: tasks;
+
+  min-height: 180px;
+
+  padding: 25px;
+}
+
+.tasks-panel h2 {
+  font-size: 1.45rem;
+}
+
+/* =========================================================
+   BREAK / DOODLE
+========================================================= */
+
+.game-panel {
+  grid-area: game;
+
+  padding: 30px;
+}
+
+#focus-message {
+  padding: 35px 10px;
+
+  text-align: center;
+}
+
+#focus-message h2 {
+  margin-bottom: 10px;
+
+  font-size: 1.6rem;
+}
+
+#focus-message p {
+  max-width: 600px;
+  margin: auto;
+
+  color: var(--muted);
+
+  line-height: 1.6;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* =========================================================
+   DOODLE
+========================================================= */
+
+.canvas-container {
+  width: fit-content;
+  max-width: 100%;
+
+  margin: 20px auto;
+
+  overflow: hidden;
+
+  border-radius: 14px;
+
+  background: #fff;
+}
+
+#doodle-pad {
+  display: block;
+
+  max-width: 100%;
+  height: auto;
+
+  cursor: crosshair;
+}
+
+.drawing-controls {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 14px;
+
+  color: var(--muted);
+
+  font-size: 0.8rem;
+}
+
+.drawing-controls input[type="color"] {
+  width: 32px;
+  height: 28px;
+
+  padding: 2px;
+
+  border: 1px solid var(--border);
+  border-radius: 7px;
+
+  background: transparent;
+}
+
+.drawing-controls input[type="range"] {
+  accent-color: var(--purple);
+}
+
+#clear-canvas {
+  padding: 9px 15px;
+
+  border: 1px solid rgba(255, 114, 114, 0.25);
+  border-radius: 10px;
+
+  background: rgba(255, 114, 114, 0.10);
+
+  color: #ffaaa8;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 850px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+
+    grid-template-areas:
+      "timer"
+      "spotify"
+      "tasks"
+      "game";
+  }
+
+  .timer-panel {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard {
+    width: calc(100% - 20px);
+    padding-top: 15px;
+
+    gap: 12px;
+  }
+
+  .timer-panel,
+  .spotify-panel,
+  .tasks-panel,
+  .game-panel {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  #time {
+    font-size: 4rem;
+  }
+
+  .settings {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    width: 100%;
+  }
+
+  .controls button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

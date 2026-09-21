@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="Galaxy Pomodoro — a focused workspace combining Pomodoro sessions, Spotify and creative breaks."
+  >
+
+  <title>Galaxy Pomodoro</title>
+
+  <link rel="stylesheet" href="pomo.css">
+</head>
+
+<body>
+  <!-- Ambient Galaxy Background -->
+  <div class="stars" aria-hidden="true"></div>
+  <div class="twinkling" aria-hidden="true"></div>
+
+  <main class="dashboard">
+
+    <!-- =========================================================
+         HERO — POMODORO TIMER
+    ========================================================== -->
+    <section class="panel timer-panel" aria-labelledby="timer-heading">
+
+      <div class="section-header">
+        <div>
+          <span class="eyebrow">FOCUS SESSION</span>
+          <h1 id="timer-heading">Focus Timer</h1>
+        </div>
+
+        <span class="session-badge" id="session-type">
+          Work
+        </span>
+      </div>
+
+      <div class="timer">
+        <div
+          id="time"
+          class="timer-value"
+          role="timer"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          25:00
+        </div>
+
+        <div class="timer-status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>Ready to focus</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button
+          id="start-stop"
+          class="primary-btn"
+          type="button"
+        >
+          Start
+        </button>
+
+        <button
+          id="reset"
+          class="secondary-btn"
+          type="button"
+        >
+          Reset
+        </button>
+      </div>
+
+      <!-- Session Settings -->
+      <div class="settings">
+
+        <div class="settings-heading">
+          <span>Session lengths</span>
+        </div>
+
+        <div class="settings-grid">
+
+          <div class="input-group">
+            <label for="work-duration">Work</label>
+            <div class="input-wrapper">
+              <input
+                type="number"
+                id="work-duration"
+                value="25"
+                min="1"
+                max="60"
+                inputmode="numeric"
+              >
+              <span>min</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="short-break">Short</label>
+            <div class="input-wrapper">
+              <input
+                type="number"
+                id="short-break"
+                value="5"
+                min="1"
+                max="30"
+                inputmode="numeric"
+              >
+              <span>min</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="long-break">Long</label>
+            <div class="input-wrapper">
+              <input
+                type="number"
+                id="long-break"
+                value="15"
+                min="1"
+                max="60"
+                inputmode="numeric"
+              >
+              <span>min</span>
+            </div>
+          </div>
+
+        </div>
+
+        <button
+          id="apply-settings"
+          class="apply-btn"
+          type="button"
+        >
+          Apply session lengths
+        </button>
+      </div>
+
+      <!-- Session Statistics -->
+      <div class="statistics">
+
+        <div class="stat-item">
+          <span class="stat-label">Completed sessions</span>
+          <strong
+            id="work-sessions"
+            class="highlight"
+          >
+            0
+          </strong>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         SPOTIFY — CORE MUSIC EXPERIENCE
+    ========================================================== -->
+    <section
+      class="panel spotify-panel"
+      aria-labelledby="spotify-heading"
+    >
+
+      <div class="section-header spotify-header">
+
+        <div>
+          <span class="eyebrow">FOCUS MUSIC</span>
+          <h2 id="spotify-heading">Spotify</h2>
+        </div>
+
+        <span class="spotify-mark" aria-label="Spotify">
+          ●
+        </span>
+
+      </div>
+
+      <div class="spotify-widget">
+
+        <div class="spotify-widget-header">
+
+          <div class="spotify-artwork" aria-hidden="true">
+            <span>♫</span>
+          </div>
+
+          <div class="spotify-meta">
+            <span class="spotify-label">Study Playlist</span>
+            <h3>Focus &amp; Study</h3>
+            <p>Music for your current session</p>
+          </div>
+
+        </div>
+
+        <div class="spotify-player">
+
+          <iframe
+            title="Spotify Study Playlist"
+            src="https://open.spotify.com/embed/playlist/38mWQAGEylOPPcWfDpB6FO?utm_source=generator&si=c041d91e063c4d53"
+            width="100%"
+            height="352"
+            frameborder="0"
+            allowfullscreen
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          ></iframe>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         TASKS — NEW PRODUCTIVITY LAYER
+    ========================================================== -->
+    <section
+      class="panel tasks-panel"
+      aria-labelledby="tasks-heading"
+    >
+
+      <div class="section-header">
+
+        <div>
+          <span class="eyebrow">TODAY</span>
+          <h2 id="tasks-heading">Tasks</h2>
+        </div>
+
+        <button
+          class="icon-btn"
+          id="add-task"
+          type="button"
+          aria-label="Add task"
+          title="Add task"
+        >
+          +
+        </button>
+
+      </div>
+
+      <div
+        id="task-list"
+        class="task-list"
+        aria-live="polite"
+      >
+
+        <div class="task-item active-task">
+
+          <button
+            class="task-check"
+            type="button"
+            aria-label="Complete task"
+          ></button>
+
+          <div class="task-content">
+            <span class="task-title">
+              Start a focused work session
+            </span>
+
+            <span class="task-meta">
+              1 Pomodoro
+            </span>
+          </div>
+
+          <span class="task-state">
+            Active
+          </span>
+
+        </div>
+
+        <div class="task-empty" id="task-empty">
+          <span>No more tasks for today.</span>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         BREAK SPACE — LONG BREAK EXPERIENCE
+    ========================================================== -->
+    <section
+      class="panel game-panel"
+      aria-labelledby="break-heading"
+    >
+
+      <!-- Work / Short Break State -->
+      <div id="focus-message" class="break-intro">
+
+        <span class="eyebrow">BREAK SPACE</span>
+
+        <h2 id="break-heading">
+          Stay Focused
+        </h2>
+
+        <p>
+          Complete your focus sessions and your creative break space
+          will unlock during the long break.
+        </p>
+
+        <div class="break-indicator">
+          <span class="break-indicator-dot"></span>
+          Long break unlocks the doodle space
+        </div>
+
+      </div>
+
+
+      <!-- Long Break State -->
+      <div
+        id="drawing-workspace"
+        class="hidden"
+      >
+
+        <div class="section-header">
+
+          <div>
+            <span class="eyebrow">LONG BREAK</span>
+
+            <h2>
+              Doodle Space
+            </h2>
+          </div>
+
+          <span class="break-icon" aria-hidden="true">
+            ✦
+          </span>
+
+        </div>
+
+        <div class="canvas-container">
+          <canvas
+            id="doodle-pad"
+            width="600"
+            height="300"
+            aria-label="Doodle drawing canvas"
+          ></canvas>
+        </div>
+
+        <div class="drawing-controls">
+
+          <div class="drawing-control">
+
+            <label for="color-picker">
+              Color
+            </label>
+
+            <input
+              type="color"
+              id="color-picker"
+              value="#ff7675"
+            >
+
+          </div>
+
+          <div class="drawing-control">
+
+            <label for="brush-size">
+              Brush
+            </label>
+
+            <input
+              type="range"
+              id="brush-size"
+              min="1"
+              max="20"
+              value="5"
+            >
+
+          </div>
+
+          <button
+            id="clear-canvas"
+            class="secondary-btn"
+            type="button"
+          >
+            Clear board
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- Application Logic -->
+  <script src="pomo.js"></script>
+
+</body>
+</html>
