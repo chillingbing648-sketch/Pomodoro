@@ -158,7 +158,7 @@ Lint:
 npm run lint
 ```
 
-## 🌐 Run the Vanilla Version
+## 🚀 Deployment\n\nThe React workspace is configured for GitHub Pages through `.github/workflows/deploy.yml`. Every push to `main` builds `pomodoro-react` and publishes `pomodoro-react/dist`. The workflow can also be started manually from GitHub Actions.\n\n## 🌐 Run the Vanilla Version
 
 No npm setup is required. Open `pomo.html` in a modern browser.
 
