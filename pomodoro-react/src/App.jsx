@@ -49,6 +49,8 @@ export default function App() {
   const [taskInput, setTaskInput] = useState("");
   const [tasks, setTasks] = useState(getStoredTasks);
   const [notificationMessage, setNotificationMessage] = useState("");
+  const [brushColor, setBrushColor] = useState("#7c6cff");
+  const [brushSize, setBrushSize] = useState(5);
 
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
@@ -304,11 +306,11 @@ export default function App() {
     const context = contextRef.current;
     if (!context) return;
     const { x, y } = getCanvasPosition(event);
-    context.lineWidth = 5;
-    context.strokeStyle = "#7c6cff";
+    context.lineWidth = Number(brushSize);
+    context.strokeStyle = brushColor;
     context.lineTo(x, y);
     context.stroke();
-  }, [getCanvasPosition]);
+  }, [brushColor, brushSize, getCanvasPosition]);
 
   const stopDrawing = useCallback(() => {
     if (!drawingRef.current) return;
@@ -529,7 +531,8 @@ export default function App() {
                 />
               </div>
               <div className="drawing-controls">
-                <span>Use the canvas to reset your mind.</span>
+                <label>Color <input type="color" value={brushColor} onChange={(event) => setBrushColor(event.target.value)} /></label>
+                <label className="brush-control">Brush <input type="range" min="1" max="30" value={brushSize} onChange={(event) => setBrushSize(Number(event.target.value))} /></label>
                 <button className="clear-canvas" onClick={clearCanvas}>Clear Canvas</button>
               </div>
             </div>
