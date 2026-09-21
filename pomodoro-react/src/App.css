@@ -1091,3 +1091,224 @@ kbd {
     margin-left: 0;
   }
 }
+
+/* =========================================================
+   BACKGROUND ENGINE
+   Independent visual layer — never controls timer state.
+========================================================= */
+
+.background-engine {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+  background: #070812;
+}
+
+.background-atmosphere,
+.background-vignette,
+.background-particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.background-atmosphere {
+  background:
+    radial-gradient(circle at 50% 12%, rgba(150, 130, 255, .20), transparent 34%),
+    radial-gradient(circle at 15% 85%, rgba(75, 105, 255, .12), transparent 30%),
+    linear-gradient(135deg, #080a18 0%, #0b1020 48%, #070812 100%);
+  animation: background-breathe 14s ease-in-out infinite alternate;
+}
+
+.background-vignette {
+  background:
+    radial-gradient(circle at center, transparent 25%, rgba(3, 5, 14, .28) 68%, rgba(3, 5, 14, .78) 100%),
+    linear-gradient(180deg, rgba(3, 5, 14, .12), rgba(3, 5, 14, .52));
+}
+
+.background-particles {
+  opacity: .65;
+}
+
+.bg-midnight-rain .background-atmosphere {
+  background:
+    radial-gradient(circle at 75% 20%, rgba(55, 120, 255, .20), transparent 30%),
+    linear-gradient(155deg, #050915 0%, #07142a 48%, #03050c 100%);
+}
+
+.bg-sakura-night .background-atmosphere {
+  background:
+    radial-gradient(circle at 72% 18%, rgba(255, 190, 225, .20), transparent 24%),
+    radial-gradient(circle at 12% 80%, rgba(125, 90, 180, .18), transparent 32%),
+    linear-gradient(155deg, #0d0916 0%, #171023 55%, #070711 100%);
+}
+
+.bg-cyber-city .background-atmosphere {
+  background:
+    linear-gradient(180deg, rgba(12, 18, 42, .78), rgba(3, 5, 14, .98)),
+    repeating-linear-gradient(90deg, rgba(80, 220, 255, .05) 0 1px, transparent 1px 72px);
+  background-size: auto, 72px 100%;
+}
+
+.bg-cyber-city .background-atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 55% 0 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(0, 220, 255, .12), transparent),
+    linear-gradient(0deg, rgba(80, 220, 255, .08), transparent);
+  transform: perspective(400px) rotateX(58deg);
+  transform-origin: bottom;
+  opacity: .65;
+}
+
+.bg-deep-space .background-atmosphere {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(80, 92, 170, .13), transparent 28%),
+    linear-gradient(155deg, #03040a, #080a16 50%, #02030a);
+}
+
+.bg-lofi-window .background-atmosphere {
+  background:
+    radial-gradient(circle at 78% 30%, rgba(255, 180, 105, .18), transparent 18%),
+    radial-gradient(circle at 20% 80%, rgba(95, 130, 190, .13), transparent 28%),
+    linear-gradient(145deg, #09090e 0%, #15131a 52%, #07080d 100%);
+}
+
+.background-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.background-card {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+  color: #fff;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.background-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+}
+
+.background-card.is-active {
+  border-color: rgba(160,145,255,.72);
+  box-shadow: 0 0 0 1px rgba(160,145,255,.16), 0 14px 35px rgba(0,0,0,.22);
+}
+
+.background-card-preview {
+  position: relative;
+  display: block;
+  height: 76px;
+  overflow: hidden;
+  background: #0a0c18;
+}
+
+.background-card-glow,
+.background-card-grid {
+  position: absolute;
+  inset: 0;
+}
+
+.background-card-glow {
+  background:
+    radial-gradient(circle at 72% 30%, var(--card-accent, rgba(145,131,255,.65)), transparent 34%),
+    linear-gradient(145deg, #080a18, #16162b);
+  opacity: .85;
+}
+
+.background-card-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(to bottom, transparent, black);
+}
+
+.bg-midnight-rain .background-card-glow { background: radial-gradient(circle at 70% 25%, rgba(95,168,255,.75), transparent 35%), linear-gradient(145deg,#06101e,#102d4a); }
+.bg-sakura-night .background-card-glow { background: radial-gradient(circle at 75% 25%, rgba(233,167,207,.75), transparent 35%), linear-gradient(145deg,#140b1c,#35203d); }
+.bg-cyber-city .background-card-glow { background: radial-gradient(circle at 70% 25%, rgba(92,242,255,.7), transparent 35%), linear-gradient(145deg,#06121a,#0d2440); }
+.bg-deep-space .background-card-glow { background: radial-gradient(circle at 50% 35%, rgba(170,183,255,.42), transparent 28%), linear-gradient(145deg,#03040a,#0b0e1d); }
+.bg-lofi-window .background-card-glow { background: radial-gradient(circle at 75% 25%, rgba(240,184,120,.72), transparent 32%), linear-gradient(145deg,#0c0b10,#2b211c); }
+
+.background-card-copy {
+  display: block;
+  padding: 10px 11px 12px;
+}
+
+.background-card-copy strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.background-card-copy small {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: rgba(255,255,255,.42);
+  font-size: 9px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.background-card-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(10,10,20,.72);
+  color: #c5bdff;
+  font-size: 12px;
+}
+
+.background-settings {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+.background-settings h3 {
+  margin-top: 5px;
+  color: #fff;
+  font-size: 16px;
+}
+
+.background-settings p {
+  margin-top: 5px;
+  color: rgba(255,255,255,.4);
+  font-size: 11px;
+}
+
+@keyframes background-breathe {
+  from { transform: scale(1); opacity: .88; }
+  to { transform: scale(1.035); opacity: 1; }
+}
+
+@media (max-width: 700px) {
+  .background-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .background-card-preview {
+    height: 64px;
+  }
+}
