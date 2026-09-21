@@ -26,7 +26,7 @@ The interface is deliberately focused: the timer remains the primary interaction
 
 ## 🖼️ Preview
 
-![Pomodoro workspace preview](./docs/preview.svg)
+![Pomodoro workspace preview](https://raw.githubusercontent.com/chillingbing648-sketch/Pomodoro/main/docs/preview.svg)
 
 ## ⚡ Core Experience
 
@@ -41,11 +41,11 @@ The interface is deliberately focused: the timer remains the primary interaction
 | 🎨 **Long Break Doodle** | Canvas-based creative space |
 | 🔔 **Notifications** | Optional browser session alerts |
 | 🔊 **Completion Sound** | Audio feedback at session completion |
-| 💾 **Local Persistence** | React tasks and theme selection use localStorage |
+| 💾 **Local Persistence** | React tasks and background selection use localStorage |
 | ⌨️ **Keyboard Controls** | Space, R and S shortcuts in the React workspace |
 | 📱 **Responsive UI** | Desktop and mobile layouts |
 
-## 🧠 Pomodoro Engine
+## 🌌 Background System\n\nThe React workspace now uses an independent visual background engine. Background selection is stored locally and does not control timer state.\n\n**Flow:** `BackgroundGallery → localStorage → BackgroundEngine → CSS atmosphere / Canvas particles`\n\nAvailable atmospheres: **Nebula · Midnight Rain · Sakura Night · Cyber City · Deep Space · Lofi Window**.\n\n## 🧠 Pomodoro Engine
 
 The default rhythm is **25 min Work → 5 min Short Break**, with a **15 min Long Break after every fourth Work session**.
 
@@ -86,7 +86,7 @@ The repository contains two implementations of the same product idea:
 
 **React:** `App.jsx` + `App.css` + `main.jsx` + browser APIs
 
-![Architecture diagram](./docs/architecture.svg)
+![Architecture diagram](https://raw.githubusercontent.com/chillingbing648-sketch/Pomodoro/main/docs/architecture.svg)
 
 ### Runtime model
 
@@ -98,7 +98,7 @@ Browser APIs currently include `localStorage`, Canvas 2D, Audio, Notifications a
 
 ## 🛠️ Technology Stack
 
-![Technology Stack](./docs/tech-stack.svg)
+![Technology Stack](https://raw.githubusercontent.com/chillingbing648-sketch/Pomodoro/main/docs/tech-stack.svg)
 
 | Layer | Technology | Role |
 |---|---|---|
@@ -167,7 +167,7 @@ No npm setup is required. Open `pomo.html` in a modern browser.
 | Change | File |
 |---|---|
 | React timer/session logic | `pomodoro-react/src/App.jsx` |
-| React visual system | `pomodoro-react/src/App.css` |
+| React visual system | `pomodoro-react/src/App.css` |\n| Background definitions | `pomodoro-react/src/data/backgrounds.js` |\n| Background rendering | `pomodoro-react/src/components/BackgroundEngine.jsx` |\n| Background picker | `pomodoro-react/src/components/BackgroundGallery.jsx` |\n| GitHub Pages deployment | `.github/workflows/deploy.yml` |
 | React entry | `pomodoro-react/src/main.jsx` |
 | Vanilla markup | `pomo.html` |
 | Vanilla styling | `pomo.css` |
