@@ -98,6 +98,8 @@ Browser APIs currently include `localStorage`, Canvas 2D, Audio, Notifications a
 
 ## 🛠️ Technology Stack
 
+![Technology Stack](./docs/tech-stack.svg)
+
 | Layer | Technology | Role |
 |---|---|---|
 | UI | **React 19.2** | Interactive application |
@@ -130,7 +132,8 @@ Pomodoro/
 │       └── main.jsx
 ├── docs/
 │   ├── preview.svg
-│   └── architecture.svg
+│   ├── architecture.svg
+│   └── tech-stack.svg
 └── README.md
 ```
 
