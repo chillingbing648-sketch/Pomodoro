@@ -1312,3 +1312,9 @@ kbd {
     height: 64px;
   }
 }
+
+
+/* Background layer must stay behind the workspace without using negative stacking. */
+.app-shell { background: transparent; }
+.background-engine { z-index: 0; }
+.app-shell > :not(.background-engine) { position: relative; z-index: 1; }
