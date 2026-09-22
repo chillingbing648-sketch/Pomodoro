@@ -3,20 +3,13 @@ import "./App.css";
 import BackgroundEngine from "./components/BackgroundEngine";
 import BackgroundGallery from "./components/BackgroundGallery";
 import {
-<<<<<<< HEAD
-  AMBIENT_SOUND_PROFILES,
   ambientEngine,
-  BACKGROUND_STORAGE_KEY,
-  DEFAULT_BACKGROUND,
-=======
   STORAGE_KEY,
   DEFAULT_BACKGROUND_ID,
->>>>>>> 1ca65fc66b6f97467096f3593e8582283c1b30bd
   getBackground,
   getStoredAmbientSettings,
   saveStoredAmbientSettings,
 } from "./data/backgrounds";
-
 const DEFAULT_SETTINGS = { work: 25, short: 5, long: 15 };
 const SPOTIFY_PLAYLIST =
   "https://open.spotify.com/embed/playlist/37i9dQZF1DWWQRwui0ExPn?utm_source=generator&theme=0";
