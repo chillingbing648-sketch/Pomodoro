@@ -202,6 +202,10 @@ select {
   font-size: 15px;
 }
 
+.streak-counter strong {
+  color: #f7c480;
+}
+
 .settings-trigger {
   padding: 10px 15px;
 

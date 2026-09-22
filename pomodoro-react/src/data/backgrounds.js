@@ -14,6 +14,8 @@
 
 export const STORAGE_KEY = "pomodoro:background";
 export const DEFAULT_BACKGROUND_ID = "nebula";
+export const BACKGROUND_STORAGE_KEY = STORAGE_KEY;
+export const DEFAULT_BACKGROUND = DEFAULT_BACKGROUND_ID;
 
 /*
   Shared fields
@@ -348,3 +350,393 @@ export function subscribeBackground(listener) {
     }
   };
 }
+
+/* =============================================================================
+   Ambient Sound System
+   • Web Audio API procedural synthesis (zero network latency, offline-ready).
+   • Unique ambient sound profile per background.
+   • ON/OFF toggle, volume control, smooth crossfades between backgrounds.
+   • Autoplay-policy safe (audio context resumed on user interaction).
+   • localStorage persistence.
+============================================================================= */
+
+export const AMBIENT_STORAGE_KEY = "pomodoro:ambient_sound";
+
+export const AMBIENT_SOUND_PROFILES = Object.freeze({
+  nebula: {
+    name: "Cosmic Drone",
+    tag: "Harmonic warm drone",
+    type: "drone",
+  },
+  "midnight-rain": {
+    name: "Rainfall",
+    tag: "Gentle rain shower",
+    type: "rain",
+  },
+  "sakura-night": {
+    name: "Night Breeze",
+    tag: "Soft whispering wind",
+    type: "wind",
+  },
+  "cyber-city": {
+    name: "Neon Hum",
+    tag: "Low synth resonance",
+    type: "cyber",
+  },
+  "deep-space": {
+    name: "Deep Void",
+    tag: "Sub-bass rumble & void",
+    type: "space",
+  },
+  "lofi-window": {
+    name: "Warm Interior",
+    tag: "Room warmth & window rain",
+    type: "lofi",
+  },
+});
+
+export function getStoredAmbientSettings() {
+  try {
+    const raw = localStorage.getItem(AMBIENT_STORAGE_KEY);
+    if (!raw) return { enabled: false, volume: 0.5 };
+    const parsed = JSON.parse(raw);
+    const enabled = Boolean(parsed.enabled);
+    const volume = typeof parsed.volume === "number" && !isNaN(parsed.volume)
+      ? Math.min(1, Math.max(0, parsed.volume))
+      : 0.5;
+    return { enabled, volume };
+  } catch {
+    return { enabled: false, volume: 0.5 };
+  }
+}
+
+export function saveStoredAmbientSettings(settings) {
+  try {
+    localStorage.setItem(AMBIENT_STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    /* non-fatal */
+  }
+}
+
+class AmbientEngine {
+  constructor() {
+    this.ctx = null;
+    this.masterGain = null;
+    this.currentVoice = null;
+    this.currentBackgroundId = null;
+    this.enabled = false;
+    this.volume = 0.5;
+    this.noiseBuffers = {};
+  }
+
+  init() {
+    if (this.ctx) return;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+
+    this.ctx = new AudioCtx();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.setValueAtTime(this.enabled ? this.volume : 0, this.ctx.currentTime);
+    this.masterGain.connect(this.ctx.destination);
+  }
+
+  ensureContext() {
+    this.init();
+    if (this.ctx && this.ctx.state === "suspended") {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  getNoiseBuffer(type = "pink") {
+    if (this.noiseBuffers[type]) return this.noiseBuffers[type];
+    if (!this.ctx) return null;
+
+    const bufferSize = this.ctx.sampleRate * 3;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    if (type === "pink") {
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.08;
+        b6 = white * 0.115926;
+      }
+    } else if (type === "brown") {
+      let lastOut = 0.0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        data[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = data[i];
+        data[i] *= 2.5;
+      }
+    }
+
+    this.noiseBuffers[type] = buffer;
+    return buffer;
+  }
+
+  createVoice(bgId) {
+    if (!this.ctx) return null;
+    const ctx = this.ctx;
+    const profile = AMBIENT_SOUND_PROFILES[bgId] || AMBIENT_SOUND_PROFILES.nebula;
+    const now = ctx.currentTime;
+
+    const voiceGain = ctx.createGain();
+    voiceGain.gain.setValueAtTime(0.0001, now);
+    voiceGain.connect(this.masterGain);
+
+    const activeNodes = [];
+
+    switch (profile.type) {
+      case "rain": {
+        const noiseSource = ctx.createBufferSource();
+        noiseSource.buffer = this.getNoiseBuffer("pink");
+        noiseSource.loop = true;
+
+        const lowpass = ctx.createBiquadFilter();
+        lowpass.type = "lowpass";
+        lowpass.frequency.setValueAtTime(1400, now);
+
+        const highpass = ctx.createBiquadFilter();
+        highpass.type = "highpass";
+        highpass.frequency.setValueAtTime(250, now);
+
+        noiseSource.connect(lowpass);
+        lowpass.connect(highpass);
+        highpass.connect(voiceGain);
+
+        noiseSource.start(now);
+        activeNodes.push(noiseSource);
+        break;
+      }
+
+      case "wind": {
+        const noiseSource = ctx.createBufferSource();
+        noiseSource.buffer = this.getNoiseBuffer("pink");
+        noiseSource.loop = true;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.frequency.setValueAtTime(450, now);
+        filter.Q.setValueAtTime(2.2, now);
+
+        const lfo = ctx.createOscillator();
+        lfo.frequency.setValueAtTime(0.12, now);
+        const lfoGain = ctx.createGain();
+        lfoGain.gain.setValueAtTime(180, now);
+
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+
+        noiseSource.connect(filter);
+        filter.connect(voiceGain);
+
+        noiseSource.start(now);
+        lfo.start(now);
+        activeNodes.push(noiseSource, lfo);
+        break;
+      }
+
+      case "cyber": {
+        const osc1 = ctx.createOscillator();
+        osc1.type = "sawtooth";
+        osc1.frequency.setValueAtTime(65.4, now);
+
+        const osc2 = ctx.createOscillator();
+        osc2.type = "sawtooth";
+        osc2.frequency.setValueAtTime(65.9, now);
+
+        const oscGain = ctx.createGain();
+        oscGain.gain.setValueAtTime(0.16, now);
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(340, now);
+
+        osc1.connect(oscGain);
+        osc2.connect(oscGain);
+        oscGain.connect(filter);
+        filter.connect(voiceGain);
+
+        osc1.start(now);
+        osc2.start(now);
+        activeNodes.push(osc1, osc2);
+        break;
+      }
+
+      case "space": {
+        const osc1 = ctx.createOscillator();
+        osc1.type = "sine";
+        osc1.frequency.setValueAtTime(48, now);
+
+        const osc2 = ctx.createOscillator();
+        osc2.type = "sine";
+        osc2.frequency.setValueAtTime(48.5, now);
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = this.getNoiseBuffer("brown");
+        noise.loop = true;
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = "lowpass";
+        noiseFilter.frequency.setValueAtTime(180, now);
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.32, now);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(voiceGain);
+
+        osc1.connect(voiceGain);
+        osc2.connect(voiceGain);
+
+        osc1.start(now);
+        osc2.start(now);
+        noise.start(now);
+        activeNodes.push(osc1, osc2, noise);
+        break;
+      }
+
+      case "lofi": {
+        const rainSource = ctx.createBufferSource();
+        rainSource.buffer = this.getNoiseBuffer("pink");
+        rainSource.loop = true;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(950, now);
+
+        const osc = ctx.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(82.4, now);
+        const oscGain = ctx.createGain();
+        oscGain.gain.setValueAtTime(0.08, now);
+
+        rainSource.connect(filter);
+        filter.connect(voiceGain);
+        osc.connect(oscGain);
+        oscGain.connect(voiceGain);
+
+        rainSource.start(now);
+        osc.start(now);
+        activeNodes.push(rainSource, osc);
+        break;
+      }
+
+      case "drone":
+      default: {
+        const osc1 = ctx.createOscillator();
+        osc1.type = "sine";
+        osc1.frequency.setValueAtTime(55, now);
+
+        const osc2 = ctx.createOscillator();
+        osc2.type = "sine";
+        osc2.frequency.setValueAtTime(82.5, now);
+
+        const osc3 = ctx.createOscillator();
+        osc3.type = "sine";
+        osc3.frequency.setValueAtTime(110.2, now);
+
+        const oscGain = ctx.createGain();
+        oscGain.gain.setValueAtTime(0.24, now);
+
+        osc1.connect(oscGain);
+        osc2.connect(oscGain);
+        osc3.connect(oscGain);
+        oscGain.connect(voiceGain);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc3.start(now);
+        activeNodes.push(osc1, osc2, osc3);
+        break;
+      }
+    }
+
+    return {
+      gainNode: voiceGain,
+      nodes: activeNodes,
+      stop: () => {
+        activeNodes.forEach((node) => {
+          try {
+            node.stop();
+            node.disconnect();
+          } catch {
+            /* ignore */
+          }
+        });
+        try {
+          voiceGain.disconnect();
+        } catch {
+          /* ignore */
+        }
+      },
+    };
+  }
+
+  sync(bgId, enabled, volume) {
+    this.enabled = Boolean(enabled);
+    this.volume = Math.min(1, Math.max(0, Number(volume) || 0.5));
+
+    if (!this.enabled) {
+      if (this.masterGain && this.ctx) {
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.3);
+      }
+      return;
+    }
+
+    this.ensureContext();
+    if (!this.ctx || !this.masterGain) return;
+
+    const now = this.ctx.currentTime;
+    this.masterGain.gain.cancelScheduledValues(now);
+    this.masterGain.gain.linearRampToValueAtTime(this.volume, now + 0.2);
+
+    if (this.currentBackgroundId !== bgId || !this.currentVoice) {
+      const oldVoice = this.currentVoice;
+      if (oldVoice) {
+        oldVoice.gainNode.gain.cancelScheduledValues(now);
+        oldVoice.gainNode.gain.linearRampToValueAtTime(0.0001, now + 0.8);
+        setTimeout(() => oldVoice.stop(), 900);
+      }
+
+      const newVoice = this.createVoice(bgId);
+      if (newVoice) {
+        newVoice.gainNode.gain.cancelScheduledValues(now);
+        newVoice.gainNode.gain.linearRampToValueAtTime(0.8, now + 0.8);
+      }
+      this.currentVoice = newVoice;
+      this.currentBackgroundId = bgId;
+    }
+  }
+
+  setVolume(vol) {
+    this.volume = Math.min(1, Math.max(0, Number(vol) || 0));
+    if (this.masterGain && this.ctx && this.enabled) {
+      const now = this.ctx.currentTime;
+      this.masterGain.gain.cancelScheduledValues(now);
+      this.masterGain.gain.linearRampToValueAtTime(this.volume, now + 0.05);
+    }
+  }
+
+  destroy() {
+    if (this.currentVoice) {
+      this.currentVoice.stop();
+      this.currentVoice = null;
+    }
+    if (this.ctx) {
+      this.ctx.close().catch(() => {});
+      this.ctx = null;
+    }
+  }
+}
+
+export const ambientEngine = new AmbientEngine();

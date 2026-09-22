@@ -12,6 +12,7 @@
 
 import { useRef, useSyncExternalStore } from "react";
 import {
+  AMBIENT_SOUND_PROFILES,
   BACKGROUNDS,
   loadBackgroundId,
   resolveBackgroundId,
@@ -49,6 +50,7 @@ const CSS = `
 .bgg__card[aria-checked="true"] .bgg__check{opacity:1;transform:scale(1)}
 .bgg__name{padding:0 3px;font-size:13px;font-weight:600;letter-spacing:.005em}
 .bgg__tag{padding:0 3px;margin-top:-6px;font-size:11.5px;color:var(--bgg-muted)}
+.bgg__sound{padding:0 3px;margin-top:-3px;font-size:10.5px;color:var(--a);opacity:0.85;letter-spacing:.02em}
 @media (prefers-reduced-motion:reduce){.bgg__card,.bgg__check{transition:none}
   .bgg__card:hover,.bgg__card:active{transform:none}}
 `;
@@ -142,6 +144,11 @@ export default function BackgroundGallery({
               </span>
               <span className="bgg__name">{bg.name}</span>
               <span className="bgg__tag">{bg.tagline}</span>
+              {AMBIENT_SOUND_PROFILES[bg.id] && (
+                <span className="bgg__sound" title={`Ambient sound: ${AMBIENT_SOUND_PROFILES[bg.id].name}`}>
+                  ♪ {AMBIENT_SOUND_PROFILES[bg.id].name}
+                </span>
+              )}
             </button>
           );
         })}

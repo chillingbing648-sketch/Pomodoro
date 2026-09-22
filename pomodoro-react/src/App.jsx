@@ -3,9 +3,13 @@ import "./App.css";
 import BackgroundEngine from "./components/BackgroundEngine";
 import BackgroundGallery from "./components/BackgroundGallery";
 import {
+  AMBIENT_SOUND_PROFILES,
+  ambientEngine,
   BACKGROUND_STORAGE_KEY,
   DEFAULT_BACKGROUND,
   getBackground,
+  getStoredAmbientSettings,
+  saveStoredAmbientSettings,
 } from "./data/backgrounds";
 
 const DEFAULT_SETTINGS = { work: 25, short: 5, long: 15 };
@@ -38,13 +42,52 @@ function getStoredBackground() {
   }
 }
 
+function getTodayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getStoredStreak() {
+  try {
+    const raw = localStorage.getItem("pomodoro_streak");
+    if (!raw) return { count: 0, lastDate: null };
+    const parsed = JSON.parse(raw);
+    const count = typeof parsed.count === "number" && parsed.count >= 0 ? parsed.count : 0;
+    const lastDate = typeof parsed.lastDate === "string" ? parsed.lastDate : null;
+
+    if (!lastDate || count === 0) return { count: 0, lastDate: null };
+
+    const today = getTodayKey();
+    if (lastDate === today) {
+      return { count, lastDate };
+    }
+
+    const last = new Date(`${lastDate}T00:00:00`);
+    const cur = new Date(`${today}T00:00:00`);
+    const diffDays = Math.round((cur.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      return { count, lastDate };
+    }
+
+    return { count: 0, lastDate };
+  } catch {
+    return { count: 0, lastDate: null };
+  }
+}
+
 export default function App() {
   const [sessionType, setSessionType] = useState("Work");
   const [remainingTime, setRemainingTime] = useState(DEFAULT_SETTINGS.work * 60000);
   const [isRunning, setIsRunning] = useState(false);
   const [workSessions, setWorkSessions] = useState(0);
+  const [streak, setStreak] = useState(getStoredStreak);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [backgroundId, setBackgroundId] = useState(getStoredBackground);
+  const [ambientSound, setAmbientSound] = useState(getStoredAmbientSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [taskInput, setTaskInput] = useState("");
   const [tasks, setTasks] = useState(getStoredTasks);
@@ -61,11 +104,16 @@ export default function App() {
   const settingsRef = useRef(DEFAULT_SETTINGS);
   const workSessionsRef = useRef(0);
   const tasksRef = useRef([]);
+  const isCompletingRef = useRef(false);
 
   useEffect(() => { sessionTypeRef.current = sessionType; }, [sessionType]);
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   useEffect(() => { workSessionsRef.current = workSessions; }, [workSessions]);
   useEffect(() => { tasksRef.current = tasks; }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem("pomodoro_streak", JSON.stringify(streak));
+  }, [streak]);
 
   useEffect(() => {
     localStorage.setItem("pomodoro_tasks", JSON.stringify(tasks));
@@ -74,6 +122,15 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(BACKGROUND_STORAGE_KEY, backgroundId);
   }, [backgroundId]);
+
+  useEffect(() => {
+    saveStoredAmbientSettings(ambientSound);
+    ambientEngine.sync(backgroundId, ambientSound.enabled, ambientSound.volume);
+  }, [ambientSound, backgroundId]);
+
+  useEffect(() => {
+    return () => ambientEngine.destroy();
+  }, []);
 
   const showNotification = useCallback((message) => {
     setNotificationMessage(message);
@@ -124,6 +181,9 @@ export default function App() {
   }, []);
 
   const completeSession = useCallback(() => {
+    if (isCompletingRef.current) return;
+    isCompletingRef.current = true;
+
     const currentSession = sessionTypeRef.current;
     const currentSettings = settingsRef.current;
     const currentWorkSessions = workSessionsRef.current;
@@ -139,6 +199,21 @@ export default function App() {
       const newSessionCount = currentWorkSessions + 1;
       workSessionsRef.current = newSessionCount;
       setWorkSessions(newSessionCount);
+
+      const today = getTodayKey();
+      setStreak((prev) => {
+        if (prev.lastDate === today) return prev;
+        if (!prev.lastDate) return { count: 1, lastDate: today };
+
+        const last = new Date(`${prev.lastDate}T00:00:00`);
+        const cur = new Date(`${today}T00:00:00`);
+        const diffDays = Math.round((cur.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+
+        return {
+          count: diffDays === 1 ? prev.count + 1 : 1,
+          lastDate: today,
+        };
+      });
 
       const activeTask = currentTasks.find((task) => !task.completed);
       if (activeTask) {
@@ -159,6 +234,7 @@ export default function App() {
       remainingTimeRef.current = nextTime;
       setSessionType(nextType);
       setRemainingTime(nextTime);
+      isCompletingRef.current = false;
 
       showNotification(
         isLongBreak
@@ -179,6 +255,7 @@ export default function App() {
     remainingTimeRef.current = nextTime;
     setSessionType("Work");
     setRemainingTime(nextTime);
+    isCompletingRef.current = false;
     showNotification("Break finished. Ready to focus again.");
     sendBrowserNotification("Break Finished", "Your next focus session is ready.");
   }, [playCompletionSound, showNotification, sendBrowserNotification]);
@@ -197,7 +274,9 @@ export default function App() {
 
       if (nextRemaining <= 0) {
         window.clearInterval(interval);
-        completeSession();
+        if (!isCompletingRef.current) {
+          completeSession();
+        }
       }
     }, 250);
 
@@ -362,6 +441,10 @@ export default function App() {
         </div>
 
         <div className="header-actions">
+          <div className="session-counter streak-counter" title="Consecutive focus days">
+            <span>STREAK</span>
+            <strong>{streak.count}d</strong>
+          </div>
           <div className="session-counter">
             <span>FOCUS SESSIONS</span>
             <strong>{workSessions}</strong>
