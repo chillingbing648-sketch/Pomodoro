@@ -4,50 +4,102 @@
 
 ### **Focus is the feature. Everything else supports it.**
 
-A polished, client-side Pomodoro workspace combining focused sessions, Spotify study music, task tracking, customizable timing, and a creative Long Break doodle space.
+A focused, client-side productivity workspace built around the Pomodoro rhythm — combining a reliable timer, Spotify study music, lightweight tasks, atmospheric backgrounds, ambient sound, and a creative break experience.
 
-<p><a href="https://github.com/chillingbing648-sketch/Pomodoro"><strong>View Repository</strong></a> · <a href="./pomodoro-react"><strong>React App</strong></a></p>
+<p>
+  <a href="https://chillingbing648-sketch.github.io/Pomodoro/"><strong>▶ Live Preview</strong></a>
+  ·
+  <a href="https://github.com/chillingbing648-sketch/Pomodoro"><strong>Source Code</strong></a>
+  ·
+  <a href="./pomodoro-react"><strong>React Workspace</strong></a>
+</p>
 
-<img src="https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=111111" alt="React 19.2"> <img src="https://img.shields.io/badge/Vite-8.3-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 8.3"> <img src="https://img.shields.io/badge/JavaScript-ESM-F7DF1E?style=flat-square&logo=javascript&logoColor=111111" alt="JavaScript"> <img src="https://img.shields.io/badge/CSS3-UI-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3"> <img src="https://img.shields.io/badge/Spotify-Embed-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="Spotify">
+<img src="https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=111111" alt="React 19.2">
+<img src="https://img.shields.io/badge/Vite-8.3-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 8.3">
+<img src="https://img.shields.io/badge/JavaScript-ESM-F7DF1E?style=flat-square&logo=javascript&logoColor=111111" alt="JavaScript ESM">
+<img src="https://img.shields.io/badge/CSS3-UI-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3">
+<img src="https://img.shields.io/badge/Spotify-Embed-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="Spotify Embed">
+<img src="https://img.shields.io/badge/Client--Side-Only-8B5CF6?style=flat-square" alt="Client-side only">
 
 </div>
 
 ---
 
-## ✦ The Concept
+## ✦ What is Pomodoro?
 
-Pomodoro should not feel like a stopwatch floating on an empty page.
+Pomodoro is a minimal focus workspace designed around one principle:
 
-This project turns the timer into a small, focused workspace:
+> **The timer should command attention. Everything else should support the session.**
 
-**Timer → Music → Tasks → Creative Break**
+Instead of treating a Pomodoro timer as an isolated stopwatch, the project brings the surrounding focus tools into one calm interface:
 
-The interface is deliberately focused: the timer remains the primary interaction while everything else supports the session.
+**Focus → Music → Tasks → Atmosphere → Break → Return**
+
+It is intentionally client-side, lightweight, and free from a project-owned backend or database.
+
+## 🚀 Live Preview
+
+### **[Open Pomodoro →](https://chillingbing648-sketch.github.io/Pomodoro/)**
+
+The deployed React workspace is available through GitHub Pages.
+
+For the original lightweight implementation, open `pomo.html` directly in a modern browser.
+
+---
 
 ## 🖼️ Preview
 
 ![Pomodoro workspace preview](https://raw.githubusercontent.com/chillingbing648-sketch/Pomodoro/main/docs/preview.svg)
 
-## ⚡ Core Experience
+---
 
-| Feature | Purpose |
+## ✨ Core Features
+
+| Capability | What it does |
 |---|---|
-| ⏱️ **Pomodoro Timer** | Work, Short Break and Long Break cycles |
-| 🔁 **4-Session Rhythm** | Every fourth Work session unlocks the Long Break |
+| ⏱️ **Pomodoro Timer** | Focus, Short Break and Long Break sessions |
+| 🔁 **Session Rhythm** | Tracks the Work → Break cycle and Long Break cadence |
 | ⚙️ **Custom Durations** | Configure Work, Short Break and Long Break lengths |
-| 🎵 **Spotify Workspace** | Keep study music inside the app |
-| ✓ **Task System** | Add, complete and delete tasks |
-| 🍅 **Pomodoro Attribution** | Completed Work sessions can increment an unfinished task |
-| 🎨 **Long Break Doodle** | Canvas-based creative space |
-| 🔔 **Notifications** | Optional browser session alerts |
-| 🔊 **Completion Sound** | Audio feedback at session completion |
-| 💾 **Local Persistence** | React tasks and background selection use localStorage |
-| ⌨️ **Keyboard Controls** | Space, R and S shortcuts in the React workspace |
-| 📱 **Responsive UI** | Desktop and mobile layouts |
+| 🎵 **Spotify Workspace** | Keep focus music alongside the timer |
+| ✓ **Lightweight Tasks** | Add, complete and delete tasks |
+| 🍅 **Pomodoro Attribution** | Completed Work sessions can contribute to an unfinished task |
+| 🌌 **Atmospheres** | Six animated visual environments designed for different moods |
+| 🔊 **Ambient Sound** | Background-specific procedural sound profiles with persistent settings |
+| 🎨 **Creative Break** | Canvas-based doodling during the Long Break |
+| 🔔 **Notifications** | Optional browser session notifications |
+| 💾 **Local Persistence** | Stores supported preferences and task/background state locally |
+| ⌨️ **Keyboard Controls** | Fast timer controls in the React workspace |
+| 📱 **Responsive UI** | Designed for desktop and smaller screens |
+| ♿ **Reduced Motion** | Respects the browser's reduced-motion preference |
 
-## 🌌 Background System\n\nThe React workspace now uses an independent visual background engine. Background selection is stored locally and does not control timer state.\n\n**Flow:** `BackgroundGallery → localStorage → BackgroundEngine → CSS atmosphere / Canvas particles`\n\nAvailable atmospheres: **Nebula · Midnight Rain · Sakura Night · Cyber City · Deep Space · Lofi Window**.\n\n## 🧠 Pomodoro Engine
+---
 
-The default rhythm is **25 min Work → 5 min Short Break**, with a **15 min Long Break after every fourth Work session**.
+## 🌌 Atmosphere System
+
+The React workspace includes an independent background engine designed to add atmosphere without competing with the timer.
+
+### Available environments
+
+- **Nebula** — slow interstellar clouds
+- **Midnight Rain** — quiet storm over a sleeping city
+- **Sakura Night** — petals drifting under moonlight
+- **Cyber City** — restrained neon skyline
+- **Deep Space** — distant world and stars
+- **Lofi Window** — warm room during rainy dusk
+
+Each atmosphere has its own visual renderer, palette, motion profile and ambient sound identity.
+
+The background selection is persisted locally and remains independent from timer state.
+
+![Background and system architecture](https://raw.githubusercontent.com/chillingbing648-sketch/Pomodoro/main/docs/architecture.svg)
+
+---
+
+## 🧠 Timer Model
+
+The default rhythm is:
+
+**25 min Work → 5 min Short Break → repeat → 15 min Long Break**
 
 | Session | Default |
 |---|---:|
@@ -55,64 +107,130 @@ The default rhythm is **25 min Work → 5 min Short Break**, with a **15 min Lon
 | Short Break | **5 min** |
 | Long Break | **15 min** |
 
-The React implementation uses a deadline-based timer reference with 250ms UI updates. The vanilla implementation uses `requestAnimationFrame`.
+The React workspace uses a deadline-based timer reference with lightweight UI updates. The original vanilla implementation uses `requestAnimationFrame`.
 
-## 🎵 Music Is Part of the Workflow
+The two implementations are kept separate so the project can demonstrate both a framework-based and browser-native approach.
 
-Spotify is intentionally a major workspace section rather than a tiny external link. The embedded player keeps focus music beside the timer.
+---
 
-Playback and availability are controlled by Spotify and the browser.
+## 🎵 Music + Focus
+
+Spotify is treated as part of the workspace rather than an external afterthought.
+
+The embedded player keeps study music close to the active session while the timer remains the primary interaction.
+
+Playback behaviour is ultimately controlled by Spotify and the browser.
+
+---
 
 ## ✓ Tasks + Pomodoro Attribution
 
-Tasks stay lightweight and directly connected to focus sessions. Each task supports completion state, a title, a Pomodoro count, and deletion.
+The task system is deliberately lightweight.
 
-When a Work session completes, the React implementation can attribute the completed Pomodoro to the first unfinished task.
+A task contains:
 
-## 🎨 Long Break = Doodle Space
+- title
+- completion state
+- Pomodoro count
+- deletion action
 
-The Long Break changes the interaction model. Instead of another productivity metric, the app exposes a Canvas 2D drawing surface.
+When a Work session completes, the React implementation can attribute the completed Pomodoro to an unfinished task.
 
-- Color picker
-- Brush-size control
-- Pointer-based drawing
-- Clear board action
+The goal is simple:
+
+`Task → Focus Session → Completed Pomodoro → Task Progress`
+
+No project-management layer is required.
+
+---
+
+## 🎨 Creative Break
+
+The Long Break introduces a different interaction model: a Canvas 2D doodle space.
+
+Current capabilities include:
+
+- color selection
+- brush sizing
+- pointer-based drawing
+- clear-board action
+
+The intention is to make the break feel like a reset rather than another productivity dashboard.
+
+---
 
 ## 🏗️ Architecture
 
-The repository contains two implementations of the same product idea:
+The repository currently contains two implementations of the product:
 
-**Vanilla:** `pomo.html` + `pomo.css` + `pomo.js`
+### React / Vite
 
-**React:** `App.jsx` + `App.css` + `main.jsx` + browser APIs
+`pomodoro-react/`
 
-![Architecture diagram](https://raw.githubusercontent.com/chillingbing648-sketch/Pomodoro/main/docs/architecture.svg)
+- React UI
+- deadline-based timer logic
+- task state
+- background engine
+- ambient sound engine
+- Spotify integration
+- Canvas drawing
+- browser persistence
+- notifications
 
-### Runtime model
+### Vanilla
 
-User → React UI / DOM → Timer + Session State → Browser APIs → Spotify Embed
+`pomo.html` · `pomo.css` · `pomo.js`
 
-Browser APIs currently include `localStorage`, Canvas 2D, Audio, Notifications and `requestAnimationFrame`.
+- browser-native DOM
+- `requestAnimationFrame`
+- Canvas 2D
+- Spotify embed
+- no npm setup required
 
-**No project-owned backend or database is required.**
+### Runtime
+
+```text
+User
+  ↓
+UI
+  ↓
+Session + Timer State
+  ├── Tasks
+  ├── Spotify
+  ├── Atmosphere
+  ├── Ambient Audio
+  └── Break Canvas
+  ↓
+Browser APIs
+  ├── localStorage
+  ├── Canvas 2D
+  ├── Web Audio
+  ├── Notifications
+  └── requestAnimationFrame
+```
+
+**No project-owned backend, database or authentication service is required.**
+
+---
 
 ## 🛠️ Technology Stack
 
-![Technology Stack](https://raw.githubusercontent.com/chillingbing648-sketch/Pomodoro/main/docs/tech-stack.svg)
+![Technology stack](https://raw.githubusercontent.com/chillingbing648-sketch/Pomodoro/main/docs/tech-stack.svg)
 
-| Layer | Technology | Role |
+| Layer | Technology | Purpose |
 |---|---|---|
-| UI | **React 19.2** | Interactive application |
-| Build | **Vite 8.3** | Dev server and production bundling |
+| UI | **React 19** | Interactive application |
+| Build | **Vite 8** | Development and production bundling |
 | Language | **JavaScript / ESM** | Application logic |
-| Styling | **CSS3** | Layout and visual system |
-| Drawing | **Canvas 2D API** | Long Break doodle workspace |
-| Timing | **requestAnimationFrame / deadline refs** | Timer scheduling |
-| Storage | **localStorage** | Local task/theme persistence |
-| Media | **Spotify Embed** | Focus music |
-| Feedback | **HTML Audio** | Completion sound |
-| Notifications | **Web Notifications API** | Optional session alerts |
-| Quality | **ESLint 10** | Static code checks |
+| Styling | **CSS3** | Responsive visual system |
+| Rendering | **Canvas 2D** | Backgrounds and doodling |
+| Audio | **Web Audio API / HTML Audio** | Ambient and completion sound |
+| Storage | **localStorage** | Client-side persistence |
+| Music | **Spotify Embed** | Focus music |
+| Notifications | **Web Notifications API** | Session alerts |
+| Quality | **ESLint 10** | Static analysis |
+
+---
 
 ## 📁 Project Structure
 
@@ -129,15 +247,33 @@ Pomodoro/
 │       ├── App.jsx
 │       ├── App.css
 │       ├── index.css
-│       └── main.jsx
+│       ├── main.jsx
+│       ├── components/
+│       │   ├── BackgroundEngine.jsx
+│       │   └── BackgroundGallery.jsx
+│       └── data/
+│           └── backgrounds.js
 ├── docs/
 │   ├── preview.svg
 │   ├── architecture.svg
 │   └── tech-stack.svg
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
 └── README.md
 ```
 
-## ⚛ Run the React Workspace
+---
+
+## ⚡ Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- npm
+- A modern browser
+
+### Run the React workspace
 
 ```bash
 cd pomodoro-react
@@ -145,62 +281,156 @@ npm install
 npm run dev
 ```
 
-Production build:
+Then open the local Vite URL shown in the terminal.
+
+### Production build
 
 ```bash
 npm run build
+```
+
+### Preview the production build
+
+```bash
 npm run preview
 ```
 
-Lint:
+### Lint
 
 ```bash
 npm run lint
 ```
 
-## 🚀 Deployment\n\nThe React workspace is configured for GitHub Pages through `.github/workflows/deploy.yml`. Every push to `main` builds `pomodoro-react` and publishes `pomodoro-react/dist`. The workflow can also be started manually from GitHub Actions.\n\n## 🌐 Run the Vanilla Version
+---
 
-No npm setup is required. Open `pomo.html` in a modern browser.
+## 🌐 Deployment
+
+The React workspace is deployed through GitHub Pages using:
+
+`.github/workflows/deploy.yml`
+
+Every push to `main` triggers the deployment workflow:
+
+```text
+Push to main
+   ↓
+GitHub Actions
+   ↓
+npm ci
+   ↓
+npm run build
+   ↓
+GitHub Pages artifact
+   ↓
+Live deployment
+```
+
+### Production URL
+
+**https://chillingbing648-sketch.github.io/Pomodoro/**
+
+---
 
 ## 🔧 Where to Modify Things
 
-| Change | File |
+| Area | File |
 |---|---|
-| React timer/session logic | `pomodoro-react/src/App.jsx` |
-| React visual system | `pomodoro-react/src/App.css` |\n| Background definitions | `pomodoro-react/src/data/backgrounds.js` |\n| Background rendering | `pomodoro-react/src/components/BackgroundEngine.jsx` |\n| Background picker | `pomodoro-react/src/components/BackgroundGallery.jsx` |\n| GitHub Pages deployment | `.github/workflows/deploy.yml` |
-| React entry | `pomodoro-react/src/main.jsx` |
+| React timer + session logic | `pomodoro-react/src/App.jsx` |
+| React visual system | `pomodoro-react/src/App.css` |
+| Global styles | `pomodoro-react/src/index.css` |
+| Background definitions + ambient profiles | `pomodoro-react/src/data/backgrounds.js` |
+| Background rendering | `pomodoro-react/src/components/BackgroundEngine.jsx` |
+| Background picker | `pomodoro-react/src/components/BackgroundGallery.jsx` |
+| React entry point | `pomodoro-react/src/main.jsx` |
+| GitHub Pages deployment | `.github/workflows/deploy.yml` |
 | Vanilla markup | `pomo.html` |
 | Vanilla styling | `pomo.css` |
-| Vanilla timer + doodle | `pomo.js` |
+| Vanilla logic | `pomo.js` |
 
-## ♢ Design Principles
+---
+
+## 🎯 Design Principles
 
 ### 01 — Focus first
-The timer is always the primary interaction.
+The timer remains the primary product interaction.
 
 ### 02 — Music stays close
-Spotify belongs inside the workspace.
+Spotify belongs inside the focus workspace.
 
-### 03 — Tasks stay lightweight
-The task layer supports focus instead of becoming project-management software.
+### 03 — Keep supporting systems lightweight
+Tasks, sound and atmosphere should assist focus rather than become distractions.
 
-### 04 — Breaks should feel different
-The Long Break becomes a creative surface.
+### 04 — Make breaks feel different
+A break should create mental distance from the work session.
 
-### 05 — Polish before bloat
-The goal is to make the existing experience feel exceptional before adding unnecessary features.
+### 05 — Atmosphere over decoration
+Motion and sound exist to establish a calm environment, not to compete for attention.
+
+### 06 — Polish before bloat
+The project prioritizes refinement of the existing experience over adding endless features.
+
+---
 
 ## 🔐 Privacy & Data
 
-The current project is primarily client-side. There is no project-owned backend, database or authentication system.
+Pomodoro is primarily client-side.
 
-React local persistence uses browser `localStorage`. Spotify and the completion-sound resource are external services/resources.
+There is currently:
 
-## 🚧 Status
+- no project-owned backend
+- no project-owned database
+- no account system
+- no required API key
 
-**Active development · React workspace evolving**
+Supported local state is stored in the browser through `localStorage`.
 
-Core Timer · Integrated  •  Spotify · Integrated  •  Tasks · Integrated  •  Doodle · Integrated  •  Visual Refinement · Ongoing
+Spotify remains an external service, and browser permissions apply to features such as notifications and audio playback.
+
+---
+
+## 🚧 Project Status
+
+**Active development**
+
+| Area | Status |
+|---|---|
+| Core timer | Integrated |
+| Short / Long Breaks | Integrated |
+| Spotify workspace | Integrated |
+| Tasks | Integrated |
+| Pomodoro attribution | Integrated |
+| Background engine | Integrated |
+| Ambient sound | Integrated |
+| Long Break doodle | Integrated |
+| GitHub Pages deployment | Integrated |
+| Further UX refinement | Ongoing |
+
+---
+
+## 🤝 Contributing
+
+Improvements, bug fixes and thoughtful UI/UX suggestions are welcome.
+
+For changes:
+
+1. Fork the repository.
+2. Create a focused branch.
+3. Make the smallest practical change.
+4. Run `npm run lint`.
+5. Run `npm run build`.
+6. Open a pull request with a concise description.
+
+Keep contributions aligned with the project's core principle:
+
+> **Focus first.**
+
+---
+
+## 📌 Project Links
+
+- **[Live Preview](https://chillingbing648-sketch.github.io/Pomodoro/)**
+- **[GitHub Repository](https://github.com/chillingbing648-sketch/Pomodoro)**
+- **[React Workspace](./pomodoro-react)**
 
 ---
 
@@ -210,6 +440,6 @@ Core Timer · Integrated  •  Spotify · Integrated  •  Tasks · Integrated  
 
 **A small productivity workspace designed around deep focus.**
 
-<sub>React 19.2 · Vite 8.3 · JavaScript · CSS3 · Canvas 2D · Spotify Embed</sub>
+<sub>React · Vite · JavaScript · CSS · Canvas 2D · Web Audio · Spotify</sub>
 
 </div>
