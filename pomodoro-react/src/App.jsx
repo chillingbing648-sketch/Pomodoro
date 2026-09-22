@@ -3,10 +3,15 @@ import "./App.css";
 import BackgroundEngine from "./components/BackgroundEngine";
 import BackgroundGallery from "./components/BackgroundGallery";
 import {
+<<<<<<< HEAD
   AMBIENT_SOUND_PROFILES,
   ambientEngine,
   BACKGROUND_STORAGE_KEY,
   DEFAULT_BACKGROUND,
+=======
+  STORAGE_KEY,
+  DEFAULT_BACKGROUND_ID,
+>>>>>>> 1ca65fc66b6f97467096f3593e8582283c1b30bd
   getBackground,
   getStoredAmbientSettings,
   saveStoredAmbientSettings,
@@ -36,9 +41,9 @@ function getStoredTasks() {
 
 function getStoredBackground() {
   try {
-    return getBackground(localStorage.getItem(BACKGROUND_STORAGE_KEY)).id;
+    return getBackground(localStorage.getItem(STORAGE_KEY)).id;
   } catch {
-    return DEFAULT_BACKGROUND;
+    return DEFAULT_BACKGROUND_ID;
   }
 }
 
@@ -120,7 +125,7 @@ export default function App() {
   }, [tasks]);
 
   useEffect(() => {
-    localStorage.setItem(BACKGROUND_STORAGE_KEY, backgroundId);
+    localStorage.setItem(STORAGE_KEY, backgroundId);
   }, [backgroundId]);
 
   useEffect(() => {
